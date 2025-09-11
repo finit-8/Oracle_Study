@@ -1,0 +1,190 @@
+-- DDL - ALTER 챕터
+
+-- 동물 테이블
+-- 이름, 나이, 색
+
+CREATE SEQUENCE SEQ_ANIMAL
+START WITH 1
+INCREMENT BY 10;		-- 1부터 10씩 증가
+
+CREATE TABLE TBL_ANIMAL(
+	ID NUMBER CONSTRAINT PK_ANIMAL PRIMARY KEY,
+	ANIMAL_NAME VARCHAR(255) UNIQUE NOT NULL,
+	ANIMAL_AGE NUMBER DEFAULT 0,
+	ANIMAL_COLOR VARCHAR(255) NOT NULL
+);
+
+INSERT INTO TBL_ANIMAL 
+VALUES(SEQ_ANIMAL.NEXTVAL, '진도니', 5, '갈색');
+INSERT INTO TBL_ANIMAL 
+VALUES(SEQ_ANIMAL.NEXTVAL, '치즈', 5, '주황색');
+
+SELECT * FROM TBL_ANIMAL;
+
+
+
+
+-- 컬럼 이름 변경
+-- RENAME A TO B : 테이블의 이름 변경
+-- RENAME COLUMN A TO B : 테이블 내의 컬럼 이름 변경
+ALTER TABLE TBL_ANIMAL RENAME COLUMN ANIMAL_NAME TO ANIMAL_SPECIES;
+SELECT * FROM TBL_ANIMAL;
+
+ALTER TABLE TBL_ANIMAL RENAME TO TBL_PET;		-- A TO B에서 내 자신을 바꾸는 거니까 A 생략가능
+SELECT * FROM TBL_PET;
+
+
+-- 테이블이 바뀌면 PK, SEQUENCE, 컬럼명도 모두 바꿔야한다. 
+-- 차라리 DROP하고 테이블 다시 만드는 게 낫지만 일단 ㄱㄱ
+RENAME SEQ_ANIMAL TO SEQ_PET;
+ALTER TABLE TBL_PET RENAME COLUMN ANIMAL_SPECIES TO PET_SPECIES;
+ALTER TABLE TBL_PET RENAME COLUMN ANIMAL_AGE TO PET_AGE;
+ALTER TABLE TBL_PET RENAME COLUMN ANIMAL_COLOR TO PET_COLOR;
+SELECT * FROM TBL_PET;
+
+
+-- PK는 이름을 바로 바꿀 수 없다.
+-- PK를 삭제하고, 다시 추가해야한다.
+-- 단, FK키가 참조하고 있는 경우 삭제할 수 없다. (개체 참조 도메인 무결성 중, 참조무결성에 저해)
+ALTER TABLE TBL_PET DROP CONSTRAINT PK_ANIMAL;
+-- 추가
+ALTER TABLE TBL_PET ADD CONSTRAINT PK_PET PRIMARY KEY(ID);
+
+DROP TABLE TBL_PET;
+DROP SEQUENCE SEQ_PET;
+
+
+
+
+CREATE SEQUENCE SEQ_PET;
+CREATE TABLE TBL_PET(
+	ID NUMBER,
+	PET_NAME VARCHAR(255) UNIQUE NOT NULL,
+	PET_AGE NUMBER DEFAULT 0,
+	PET_COLOR VARCHAR(255) NOT NULL,
+	CONSTRAINT PK_PET PRIMARY KEY(ID)		-- 보통 PK는 분리 안하고 바로 한 줄로 입력하고, FK를 분리해서 쓴다.
+);
+
+
+-- ======================================================================
+
+-- 자동차 테이블
+CREATE SEQUENCE SEQ_CAR;
+CREATE TABLE TBL_CAR (
+	ID NUMBER CONSTRAINT PK_CAR PRIMARY KEY,
+	CAR_NUM NUMBER UNIQUE NOT NULL,
+	CAR_BRAND VARCHAR(255) NOT NULL,
+	CAR_RELEASEDATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	CAR_COLOR CHAR(10),
+	CAR_PRICE NUMBER
+);
+SELECT * FROM TBL_CAR;
+
+INSERT INTO TBL_CAR (ID, CAR_NUM, CAR_BRAND, CAR_COLOR, CAR_PRICE)
+VALUES(1, 346552, 'FORD', 'BLUE', 100000000);								-- 어떻게 타임스탬프 쓰지? ==> 디폴트라서 INSERT INTO문에서부터 변수로 안주면 된다. 
+INSERT INTO TBL_CAR (ID, CAR_NUM, CAR_BRAND, CAR_COLOR, CAR_PRICE)
+VALUES(SEQ_CAR.NEXTVAL, 904032, '람보르기니', 'RED', 500000000);				-- 시퀀스 안되는데? ==> INSERT INTO문에서 변수줘야 시퀀스 동작함.
+SELECT * FROM TBL_CAR;
+
+DROP TABLE TBL_CAR;
+DROP SEQUENCE SEQ_CAR;
+
+
+-- ======================================================================
+
+-- 유저테이블, 게시글 테이블
+CREATE SEQUENCE SEQ_USER;
+CREATE TABLE TBL_USER(
+	ID NUMBER CONSTRAINT PK_USER PRIMARY KEY,
+	USER_NAME VARCHAR2(255),
+	USER_AGE NUMBER
+);
+SELECT * FROM TBL_USER;
+
+CREATE SEQUENCE SEQ_POST;
+CREATE TABLE TBL_POST(
+	ID NUMBER CONSTRAINT PK_POST PRIMARY KEY,
+	POST_TITLE VARCHAR2(255) NOT NULL,
+	POST_CONTENT VARCHAR2(255) NOT NULL,
+	USER_ID NUMBER,										-- FK 지정하더라도 줄 바꾸면 , 붙여야 됨
+	CONSTRAINT FK_POST_USER FOREIGN KEY(USER_ID)		-- FK_POST_USER 내가(POST) USER를 참조한다고 선언.
+	REFERENCES TBL_USER(ID)								-- 래퍼런스가 되는 테이블의 컬럼을 지정.
+);
+SELECT * FROM TBL_POST;
+
+
+
+
+
+-- =======================================================
+-- 정규화 (테이블 분리) 챕터
+
+-- 유치원
+-- 원생 테이블
+-- 학부모 테이블
+-- 체험학습 테이블
+-- 원생은 여러 번 체험학습에 등록가능		
+-- ==> 원생 ID마다 여러 체험학습 ID 올 수 있다
+--		1				1 5 2
+--		2				1 3 
+--		3				5 4 7
+--											
+--	==> 체험학습 ID마다 여러 원생 ID 올 수 있다
+--			1				1 2
+--			2				1
+--			3				2
+--			4				3
+--			5				3
+--			7				3
+
+
+
+
+
+
+-- =========================================================
+
+--요구사항
+--안녕하세요, 광고 회사를 운영하려고 준비중인 사업가입니다.
+--광고주는 기업이고 기업 정보는 이름, 주소, 대표번호, 기업종류(스타트업, 중소기업, 중견기업, 대기업)입니다.
+--광고는 제목, 내용이 있고 기업은 여러 광고를 신청할 수 있습니다.
+--기업이 광고를 선택할 때에는 카테고리로 선택하며, 대카테고리, 중카테고리, 소카테고리가 있습니다.
+
+-- 내 풀이
+-- 중복돼서 분리할 수 있는거 
+-- 기업은 여러 광고 가능(광고테이블로 분리), 
+-- 광고의 카테고리가 중복될 수 있고 대중소로 여러 개 나오니까 (카테고리 테이블로 분리),
+-- 기업도 여러 기업종류에 속할 수 있는건가??		
+
+CREATE SEQUENCE SEQ_COMPANYLIST;
+CREATE TABLE TBL_COMPANYLIST(
+	ID NUMBER CONSTRAINT PK_COMPANYLIST PRIMARY KEY,
+	COMPANYLIST_NAME VARCHAR2(255) UNIQUE NOT NULL,
+	COMPANYLIST_ADDRESS VARCHAR2(255),
+	COMPANYLIST_CALL NUMBER,
+	COMPANYLIST_KIND VARCHAR2(255)
+);
+CREATE SEQUENCE SEQ_ADS;
+CREATE TABLE TBL_ADS(
+	ID NUMBER CONSTRAINT PK_ADS PRIMARY KEY,
+	ADS_TITLE VARCHAR2(255) UNIQUE NOT NULL,
+	ADS_CONTENTS VARCHAR2(255),
+	COMPANYLIST_ID NUMBER,
+	CONSTRAINT FK_ADS_COMPANYLIST FOREIGN KEY(COMPANYlIST_ID)
+	REFERENCES TBL_COMPANYLIST(ID)
+);
+CREATE SEQUENCE SEQ_ADS_CATEGORY;
+CREATE TABLE TBL_ADS_CATEGORY(
+	ID NUMBER CONSTRAINT PK_ADS_CATEGORY PRIMARY KEY,
+	ADS_CATEGORY VARCHAR2(255) UNIQUE NOT NULL,
+	ADS_ID NUMBER,
+	CONSTRAINT FK_ADS_CATEGORY_ADS FOREIGN KEY(ADS_ID)
+	REFERENCES TBL_ADS(ID)
+);
+
+-- 정답 풀이
+-- 중복돼서 분리 해야할 거 
+-- 광고의 카테고리가 중복될 수 있고 대중소로 여러 개 나오니까 (카테고리 테이블로 분리), ==> 대 중 소 각각 테이블 만들어야 됨
+-- 기업도 여러 기업종류에 속할 수 있는건가??		==> 나눌 필요없다. 그냥 4개값을 CONSTRAINT BAN_TYPE CHECK(COMPANY_KIND IN ('스타트업', '중소기업', '중견기업', 대기업')으로 주면 됨
+	
+-- 신청 테이블 생성 (FK : 회사ID, 광고ID)
