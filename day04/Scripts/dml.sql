@@ -387,20 +387,36 @@ AND ID IN (
 -- 7) 주소가 '구'로 끝나는 유저가 작성한 게시글에 달린 모든 댓글들 조회
 	-- 알고리즘: USER_ADDRESS LIKE '%구'
 	SELECT *
-	FROM TBL_USER 
-	WHERE USER_ADDRESS LIKE '%구';				-- 에서 USER_ID (1 3 4 5)를
+	FROM TBL_USER S
+	WHERE USER_ADDRESS LIKE '%구';				-- 1. 에서 유저테이블의 ID (1 3 4 5)를
 
 	SELECT *
-	FROM TBL_POST tp ;							-- 에 사용하여 
+	FROM TBL_POST tp ;							-- 2. 에 사용하여 
 	
-	SELECT *
+	SELECT *									
 	FROM TBL_POST tp
-	WHERE ID 게시글아이디 IN (
-		SELECT ID 유저아이디
-		FROM TBL_USER 
+	WHERE USER_ID IN (							-- 3. 유저테이블의 ID와 게시글테이블의 USER_ID가 일치할 때
+		SELECT S.ID
+		FROM TBL_USER S
 		WHERE USER_ADDRESS LIKE '%구'
-	);											-- ID(= 게시글의 ID)를 조회
+	);											-- 4. 게시글테이블의 ID를 조회 (유저ID 4는 게시글을 안남겨서 유저1 3 5가 남긴 게시글 ID만 나옴)
+	
+	SELECT * FROM TBL_REPLY tr ;				-- 5. 4.의 결과값을 5.에 사용하여
+	
+	SELECT REPLY_CONTENT						-- 7. 댓글테이블의 POST_ID에 달린 댓글 조회
+	FROM TBL_REPLY tr 
+	WHERE POST_ID IN (							-- 6. 댓글테이블의 POST_ID와
+		SELECT ID								-- 		게시글 테이블의 ID 1 3 4 6과 일치하면
+		FROM TBL_POST tp
+		WHERE USER_ID IN (						
+			SELECT S.ID
+			FROM TBL_USER S
+			WHERE USER_ADDRESS LIKE '%구'
+		)
+	);
 
 -- 8) 댓글에 '한민'이가 포함된 게시글에 달린 모든 댓글 조회
+
+
 -- 9) 평균 댓글 개수보다 많이 달린 게시글을 작성한 유저
 -- 10) 가장 댓글을 적게 작성한 유저가 작성한 게시글
