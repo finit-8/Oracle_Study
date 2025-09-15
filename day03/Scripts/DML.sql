@@ -75,6 +75,7 @@ SELECT *
 FROM TBL_PARENT
 WHERE PARENT_NAME LIKE '%희';
 
+-- 과천에 거주중인 부모를 조회
 SELECT *
 FROM TBL_PARENT
 WHERE PARENT_ADDRESS NOT LIKE '%과천%';
@@ -88,7 +89,10 @@ WHERE PARENT_ADDRESS NOT LIKE '%과천%';
  * 최소값 MIN()
  * 총 합 SUM()
  * 개수 COUNT()
- * 
+ * 올림 CEIL()
+ * 내림 FLOOR()
+ * 반올림 ROUND()
+ * 반올림 ROUND(컬럼명, 소수점자릿수)
  * */
 
 
@@ -111,22 +115,13 @@ VALUES(SEQ_FIELD_TRIP.NEXTVAL, '숭어 얼음 낚시', '숭어 잡자 추워도 
 INSERT INTO TBL_FIELD_TRIP
 VALUES(SEQ_FIELD_TRIP.NEXTVAL, '커피 체험 공장', '커피 빈 객체화', 60);
 INSERT INTO TBL_FIELD_TRIP
-VALUES(SEQ_FIELD_TRIP.NEXTVAL, '치즈 제작하기', '여기 치즈 저기 치즈 이쪽 치즈 저쪽 치즈', 5);
+VALUES(SEQ_FIELD_TRIP.NEXTVAL, '치즈 제작하기', '여기 치즈 저기 치즈 이쪽 치즈 저쪽 치즈', 7);
 INSERT INTO TBL_FIELD_TRIP
 VALUES(SEQ_FIELD_TRIP.NEXTVAL, '승마 체험', '이리야!', 9);
 
 SELECT * FROM TBL_FIELD_TRIP;
 
 
-/*집계 함수
- * 
- * 평균 AVG()
- * 최대값 MAX()
- * 최소값 MIN()
- * 총 합 SUM()
- * 개수 COUNT()
- * 
- * */
 --SELECT COUNT(*)
 --FROM TBL_FIELD_TRIP;
 
@@ -137,42 +132,53 @@ FROM TBL_FIELD_TRIP;
 SELECT SUM(FIELD_TRIP_NUMBER) AS "총 수용인원"
 FROM TBL_FIELD_TRIP;
 
+
 -- 체험학습 평균 인원수
--- ROUND(값, 자릿수)
+SELECT AVG(FIELD_TRIP_NUMBER) "평균 인원"
+FROM TBL_FIELD_TRIP;		-- 34.555555556
+
+-- ROUND(값, 소수점 자릿수지정)
 SELECT ROUND(AVG(FIELD_TRIP_NUMBER), 1) AS "평균 인원"
-FROM TBL_FIELD_TRIP;
+FROM TBL_FIELD_TRIP;		-- 34.6
 
 -- 반올림 
 SELECT ROUND(AVG(FIELD_TRIP_NUMBER)) AS "평균 인원"
-FROM TBL_FIELD_TRIP;
+FROM TBL_FIELD_TRIP;		-- 35
 
 -- 내림
 SELECT FLOOR(AVG(FIELD_TRIP_NUMBER)) AS "평균 인원"
-FROM TBL_FIELD_TRIP;
+FROM TBL_FIELD_TRIP;		-- 34
 
 -- 올림
 SELECT CEIL(AVG(FIELD_TRIP_NUMBER)) AS "평균 인원"
-FROM TBL_FIELD_TRIP;
+FROM TBL_FIELD_TRIP;		-- 35
 
--- 제목이 '체험'글자를 포함하는 체험 학습의 총 인원수 조회
+-- 1) 제목이 '체험'글자를 포함하는 체험 학습의 총 인원수 조회
 SELECT SUM(FIELD_TRIP_NUMBER) AS "체험 글자를 포함한 체험의 총 인원"
 FROM TBL_FIELD_TRIP
 WHERE FIELD_TRIP_TITLE LIKE '%체험%';
 
-SELECT *
-FROM TBL_FIELD_TRIP;
-
--- 1) 체험학습 제목에 '고구마' 또는 '아이스크림' 들어간 체험 학습의 평균 인원수
+-- 2) 체험학습 제목에 '고구마' 또는 '아이스크림' 들어간 체험 학습의 평균 인원수
 SELECT AVG(FIELD_TRIP_NUMBER) AS "평균 인원수"
 FROM TBL_FIELD_TRIP
 WHERE FIELD_TRIP_TITLE LIKE '%고구마%' OR FIELD_TRIP_TITLE LIKE '%아이스크림%';
 
--- 2) 체험학습 제목이 '기'로 끝나는 체험 학습의 최소 인원수
-SELECT MIN(FIELD_TRIP_NUMBER) AS "최소 인원수"
+-- 3) 체험학습 제목이 '기'로 끝나는 체험 학습의 최소 인원수
+SELECT MIN(FIELD_TRIP_NUMBER) "'기'로 끝나는 체험학습의 최소 인원수"
 FROM TBL_FIELD_TRIP
 WHERE FIELD_TRIP_TITLE LIKE '%기';
 
 
+-- 따라서 집계 함수를 사용할 수 있는 위치
+-- 1. SELECT절
+-- 2. HAVING절
+
+-- 평균 인원보다 인원 수가 많은 체험 학습을 조회
+-- SELECT *
+-- FROM TBL_FIELD_TRIP
+-- WHERE FIELD_TRIP_NUMBER > AVG(FIELD_TRIP_NUMBER);
+
+-- 그런데 HAVING절은 뭐냐!? ↓
 
 
 --====================================================================
@@ -218,19 +224,14 @@ INSERT INTO TBL_PRODUCT
 VALUES(SEQ_PRODUCT.NEXTVAL, '배승원의 그램', 2000, 40);
 
 
--- 평균 인원보다 인원 수가 많은 체험 학습을 조회
--- 집계 함수를 사용할 수 있는 위치
--- 1. SELECT절
--- 2. HAVING절
--- SELECT *
--- FROM TBL_FIELD_TRIP
--- WHERE FIELD_TRIP_NUMBER > AVG(FIELD_TRIP_NUMBER);
 
 -- GROUP BY
--- HAVING
+-- HAVING		(그룹바이의 조건절로 집계함수 사용가능)
 
+-- 필수
 -- SELECT
 -- FROM
+
 -- 생략가능
 -- WHERE
 -- GROUP BY
@@ -242,56 +243,60 @@ SELECT PRODUCT_NAME, COUNT(PRODUCT_NAME)
 FROM TBL_PRODUCT
 GROUP BY PRODUCT_NAME;
 
--- 가격대별 개수
+-- 가격별 개수
+SELECT PRODUCT_NAME, PRODUCT_PRICE, COUNT(PRODUCT_PRICE) "가격대별 개수"
+FROM TBL_PRODUCT
+GROUP BY PRODUCT_NAME, PRODUCT_PRICE;
+
+-- 가격별 개수가 2개를 초과하는 상품 조회
 SELECT 
 	PRODUCT_NAME AS "상품명",
 	PRODUCT_PRICE AS "상품 가격",
-	COUNT(ID) AS "개수"
+	COUNT(ID) AS "가객별 개수"
 FROM TBL_PRODUCT
 GROUP BY PRODUCT_NAME, PRODUCT_PRICE
 HAVING COUNT(ID) > 2;
 -- HAVING은 GROUP BY의 조건절
 
-SELECT 
-	PRODUCT_NAME AS "상품명",
-	PRODUCT_PRICE AS "상품 가격",
-	COUNT(ID) AS "개수",
-	AVG(PRODUCT_PRICE) AS "평균 가격"
+-- 평균가격이 2000원을 초과하는 상품 개수 조회
+SELECT PRODUCT_NAME, AVG(PRODUCT_PRICE), COUNT(ID)
 FROM TBL_PRODUCT
 GROUP BY PRODUCT_NAME, PRODUCT_PRICE
 HAVING AVG(PRODUCT_PRICE) > 2000;
 
 SELECT * FROM TBL_PRODUCT;
 
--- 1) 가격대별 상품 재고 수
+-- 1) 가격별(화폐단위: 원 붙이기) 상품 재고 수(수량단위: 개 붙이기)
 -- || 연결
-SELECT 
-	PRODUCT_PRICE || '개' AS "가격대", 
-	SUM(PRODUCT_STOCK) || '개' AS "재고 수"
+SELECT PRODUCT_NAME, PRODUCT_PRICE || '원' 가격대, SUM(PRODUCT_STOCK) || '개'
 FROM TBL_PRODUCT
-GROUP BY PRODUCT_PRICE;
-
+GROUP BY PRODUCT_NAME, PRODUCT_PRICE;
 
 -- 2) 재고가 50개 이상의 개수
-SELECT COUNT(ID) AS "50개 이상의 재고를 가진 상품 개수"
-FROM TBL_PRODUCT
-WHERE PRODUCT_STOCK >= 50;
-
+SELECT PRODUCT_NAME, PRODUCT_STOCK, COUNT(ID)
+FROM TBL_PRODUCT 
+GROUP BY PRODUCT_NAME, PRODUCT_STOCK
+HAVING PRODUCT_STOCK >= 50;
 
 -- 3) 재고가 30개 미만 상품의 평균 가격
-SELECT AVG(PRODUCT_PRICE)
-FROM TBL_PRODUCT
-WHERE PRODUCT_STOCK < 30;
+SELECT PRODUCT_NAME, PRODUCT_STOCK, CEIL(AVG(PRODUCT_PRICE)) "재고 30개 미만 상품의 평균가"
+FROM TBL_PRODUCT 
+GROUP BY PRODUCT_NAME, PRODUCT_STOCK
+HAVING PRODUCT_STOCK < 30;
 
 -- 4) 재고가 30개 미만 상품 가격대별의 개수가 2개 미만 상품의 총 가격 합계
-SELECT 
-	PRODUCT_PRICE AS "가격대",
-	COUNT(PRODUCT_PRICE) AS "개수",
-	SUM(PRODUCT_PRICE) AS "총 가격의 합"
-FROM TBL_PRODUCT
+SELECT PRODUCT_NAME, COUNT(PRODUCT_PRICE), PRODUCT_STOCK, SUM(PRODUCT_PRICE)
+FROM TBL_PRODUCT 
 WHERE PRODUCT_STOCK < 30
-GROUP BY PRODUCT_PRICE
-HAVING COUNT(PRODUCT_PRICE) < 2;
+GROUP BY PRODUCT_NAME, PRODUCT_STOCK
+HAVING COUNT(PRODUCT_PRICE) < 2;					 -- 왜 ID로는 안되고, PRICE만 되나?
+
+
+
+
+
+
+
 
 
 -- WHERE 컬럼명 IN (값1, 값2, 값3, ...);
